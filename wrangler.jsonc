@@ -12,7 +12,7 @@
   },
   "routes": [
     {
-      "pattern": "atjhsu.dev/*",
+      "pattern": "atjhsu.dev",
       "custom_domain": true,
     },
   ],
