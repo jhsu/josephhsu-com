@@ -26,10 +26,8 @@ I built [ai-rlm](https://github.com/jhsu/ai-rlm) to explore this pattern in a co
 
 The project focuses on:
 
-- A recursive control loop for task decomposition.
-- Clear termination conditions to avoid runaway recursion.
-- Intermediate state that can be inspected, logged, and debugged.
-- Agent-oriented APIs for real application flows.
+- A recursive control loop with clear stop conditions to keep decomposition useful and bounded.
+- Inspectable intermediate state and agent-oriented APIs so recursive runs are observable and practical in real apps.
 
 ## Using the AI SDK for an Agent
 
@@ -37,10 +35,8 @@ ai-rlm uses the [AI SDK](https://ai-sdk.dev) as the foundation for model calls a
 
 The SDK makes it easier to wire up:
 
-- Model invocation across providers.
-- Tool calling for structured actions.
-- Streaming and typed outputs.
-- A clean interface for building agent loops.
+- Cross-provider model calls and structured tool execution.
+- Streaming, typed outputs, and a clean interface for building and operating agent loops.
 
 At a high level, the Agent in ai-rlm does:
 
@@ -106,9 +102,7 @@ console.log(stream.steps)
 
 ## What I am exploring next
 
-- Better scoring functions for when to recurse.
-- Caching repeated subproblems.
-- More tool-aware planning strategies.
-- Benchmarks comparing single-pass vs recursive runs.
+- More end-to-end examples and evaluations of RLM behavior across realistic agent tasks.
+- Practical CLI tools built on ai-rlm for debugging, analysis, and workflow automation.
 
 If you are working on production agents, this approach is worth testing where tasks naturally branch and recombine.
