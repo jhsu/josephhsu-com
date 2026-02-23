@@ -2,7 +2,7 @@
   "name": "josephhsu-blog",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --port $PORT --host $HOST",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
