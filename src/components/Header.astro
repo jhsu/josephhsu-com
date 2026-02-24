@@ -8,15 +8,17 @@ const { current = '' } = Astro.props;
 <style>
   header {
     display: flex;
+    align-items: center;
     margin: 0 auto;
     max-width: 1400px;
-    padding: 2em;
+    padding: 1rem 2rem;
     width: 100%;
+    border-bottom: 1px solid var(--surface-border);
   }
 
   @media screen and (max-width: 520px) {
     header {
-      padding: 2em 0;
+      padding: 0.8rem 0;
     }
   }
 </style>

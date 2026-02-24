@@ -8,46 +8,277 @@ const permalink = Astro.site.href;
 
 let allPosts = await getCollection('posts')
 allPosts = allPosts.sort((a, b) => new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf());
+
+const latestPost = allPosts[0];
+const recentPosts = allPosts.slice(1, 5);
 ---
 
 <BaseLayout title={title} description={description} permalink={permalink}>
-  <div class="container">
-    <h1>Latest Posts</h1>
-    {allPosts.map((post, index) => {
-      const href = `/blog/${post.data.slug}`;
-      return (
-        <div>
-          { index !== 0 && <hr /> }
-          <div class="post-item">
-            <h2>
-              <a href={href}>{post.data.title}</a>
-            </h2>
-            <p>{post.data.description}</p>
-            <div class="post-item-footer">
-              <span class="post-item-date">- {post.data.publishDate}</span>
-            </div>
+  <section class="hero container-wide">
+    <p class="kicker">Joe Hsu - Personal Blog</p>
+    <h1>Recent posts and build notes</h1>
+    <p class="hero-copy">
+      Writing focused on shipping AI products, agent systems,
+      and practical engineering decisions.
+    </p>
+  </section>
+
+  <section class="latest-feature container-wide" aria-label="Latest post">
+    {latestPost && (
+      <article class="latest-post-card">
+        <a href={`/blog/${latestPost.data.slug}`}>
+          <div class="latest-post-meta">
+            <span class="meta">Latest post</span>
+            <span class="meta-date">{latestPost.data.publishDate}</span>
           </div>
-        </div>
-      )
-    })}
-  </div>
+          <h2>{latestPost.data.title}</h2>
+          <p>{latestPost.data.description}</p>
+          <span class="latest-post-cta">Read post</span>
+        </a>
+      </article>
+    )}
+  </section>
+
+  <section class="recent-grid container-wide" aria-label="Recent posts">
+    {recentPosts.map((post) => (
+      <article class="recent-post-card">
+        <a href={`/blog/${post.data.slug}`}>
+          <span class="meta">Recent post</span>
+          <h3>{post.data.title}</h3>
+          <p>{post.data.description}</p>
+          <span class="meta-date">{post.data.publishDate}</span>
+        </a>
+      </article>
+    ))}
+  </section>
+
+  <section class="latest-list container">
+    <h2>All posts</h2>
+    {allPosts.map((post) => (
+      <article class="post-row">
+        <a href={`/blog/${post.data.slug}`}>{post.data.title}</a>
+        <span>{post.data.publishDate}</span>
+      </article>
+    ))}
+  </section>
 </BaseLayout>
 
 <style>
-  h2,
-  .post-item-footer {
+  .container-wide {
+    margin: 0 auto;
+    max-width: 1080px;
+    width: 100%;
+  }
+
+  .hero {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    padding: 6rem 0 4rem;
+    gap: 1rem;
+  }
+
+  .kicker {
+    margin: 0;
     font-family: var(--font-family-sans);
-    font-weight: 700;
-  }
-
-  .post-item-date {
-    color: var(--text-secondary);
-    text-align: left;
     text-transform: uppercase;
-    margin-right: 16px;
+    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
   }
 
-  hr {
-    margin: 60px auto;
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(2.5rem, 6vw, 4.7rem);
+    max-width: 16ch;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+
+  .hero-copy {
+    margin: 0;
+    max-width: 48ch;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+  }
+
+  .latest-feature {
+    margin-bottom: 1rem;
+  }
+
+  .latest-post-card {
+    border-radius: 20px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--surface-border);
+    box-shadow: 0 16px 40px var(--surface-shadow);
+  }
+
+  .latest-post-card a {
+    display: block;
+    padding: 2.2rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .latest-post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .latest-post-card h2 {
+    margin: 0;
+    font-family: var(--font-family-serif);
+    font-weight: 400;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 1.05;
+    max-width: 18ch;
+  }
+
+  .latest-post-card p {
+    margin: 1rem 0 1.35rem;
+    max-width: 62ch;
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+  }
+
+  .latest-post-cta {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-family: var(--font-family-sans);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.76rem;
+    transition: background 160ms ease, color 160ms ease;
+  }
+
+  .latest-post-card a:hover .latest-post-cta {
+    background: transparent;
+    color: var(--text-main);
+  }
+
+  .recent-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 4rem;
+  }
+
+  .recent-post-card {
+    border-radius: 14px;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-muted);
+  }
+
+  .recent-post-card a {
+    display: grid;
+    gap: 0.8rem;
+    padding: 1.2rem;
+    min-height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .recent-post-card h3 {
+    margin: 0;
+    font-family: var(--font-family-serif);
+    font-size: 1.45rem;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .recent-post-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+
+  .meta,
+  .meta-date {
+    font-family: var(--font-family-sans);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .latest-list {
+    margin-bottom: 3.5rem;
+  }
+
+  .latest-list h2 {
+    margin: 0 0 1.25rem;
+    font-family: var(--font-family-sans);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.95rem;
+  }
+
+  .post-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid var(--surface-border);
+    padding: 1.05rem 0;
+    font-family: var(--font-family-sans);
+  }
+
+  .post-row a {
+    text-decoration: none;
+    font-size: 1.05rem;
+  }
+
+  .post-row span {
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  @media (max-width: 980px) {
+    .recent-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .hero {
+      padding-top: 4.2rem;
+      padding-bottom: 3rem;
+    }
+
+    .hero-copy {
+      font-size: 1.03rem;
+    }
+
+    .latest-post-card a {
+      padding: 1.4rem;
+    }
+
+    .latest-post-meta {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+
+    .recent-grid {
+      grid-template-columns: 1fr;
+      margin-bottom: 3rem;
+    }
+
+    .post-row {
+      flex-direction: column;
+      gap: 0.35rem;
+    }
   }
 </style>

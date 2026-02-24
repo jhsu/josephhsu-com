@@ -1,17 +1,37 @@
 :root {
-  --background-body: #fff;
-  --text-main: #36393b;
-  --text-secondary: #6b6f72;
-  --primary-color: #548e9b;
+  --background-body: #f2f1ee;
+  --text-main: #232220;
+  --text-primary: #232220;
+  --text-secondary: #66645e;
+  --text-tertiary: #86837b;
+  --surface: #f8f6f1;
+  --surface-elevated: #fbfaf7;
+  --surface-muted: #f4f1e9;
+  --surface-border: #d9d4c8;
+  --surface-shadow: rgba(28, 28, 23, 0.08);
+  --button-bg: #232220;
+  --button-text: #f8f6f1;
+  --button-border: #232220;
+  --primary-color: #8a6a42;
   --font-family-serif: Merriweather, serif;
   --font-family-sans: 'Fira Sans', sans-serif;
 }
 
 :root.theme-dark {
-  --background-body: #202122;
-  --text-main: #fff;
-  --text-secondary: #ccc;
-  --primary-color: #548e9b;
+  --background-body: #1f1f1d;
+  --text-main: #ece8dd;
+  --text-primary: #ece8dd;
+  --text-secondary: #bbb4a5;
+  --text-tertiary: #928d82;
+  --surface: #2a2925;
+  --surface-elevated: #302f2b;
+  --surface-muted: #262521;
+  --surface-border: #3e3b34;
+  --surface-shadow: rgba(0, 0, 0, 0.3);
+  --button-bg: #ece8dd;
+  --button-text: #1f1f1d;
+  --button-border: #ece8dd;
+  --primary-color: #b79767;
 }
 
 html {
@@ -36,7 +56,10 @@ body {
   font-family: var(--font-family-serif);
   font-size: 16px;
   line-height: 1.6;
-  background-color: var(--background-body);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.55), transparent 36%),
+    radial-gradient(circle at 90% 0%, rgba(214, 202, 176, 0.25), transparent 28%),
+    var(--background-body);
   color: var(--text-main);
 }
 
