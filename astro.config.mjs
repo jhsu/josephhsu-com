@@ -9,7 +9,7 @@ import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://astro-blog-template.netlify.app',
+  site: 'https://atjhsu.dev',
   integrations: [mdx(), svelte()],
 
   markdown: {
