@@ -10,7 +10,10 @@ export interface Props {
 }
 
 const { title, description, permalink } = Astro.props;
-const socialUrl = Astro.site.href + "assets/placeholder.svg";
+const routeKey = Astro.url.pathname === '/'
+  ? 'home'
+  : Astro.url.pathname.replace(/^\/+|\/+$/g, '');
+const socialUrl = new URL(`/open-graph/${routeKey}.png`, Astro.site ?? Astro.url).href;
 ---
 
 <!-- Global Metadata -->
