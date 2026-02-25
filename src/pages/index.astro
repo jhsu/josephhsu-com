@@ -112,6 +112,14 @@ const recentPosts = allPosts.slice(1, 5);
     background: var(--surface-elevated);
     border: 1px solid var(--surface-border);
     box-shadow: 0 16px 40px var(--surface-shadow);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .latest-post-card:hover,
+  .latest-post-card:focus-within {
+    transform: translateY(-3px);
+    border-color: var(--primary-color);
+    box-shadow: 0 22px 52px var(--surface-shadow);
   }
 
   .latest-post-card a {
@@ -175,6 +183,14 @@ const recentPosts = allPosts.slice(1, 5);
     border-radius: 14px;
     border: 1px solid var(--surface-border);
     background: var(--surface-muted);
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .recent-post-card:hover,
+  .recent-post-card:focus-within {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    box-shadow: 0 14px 34px var(--surface-shadow);
   }
 
   .recent-post-card a {
