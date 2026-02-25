@@ -2,7 +2,7 @@
   const rootEl = typeof document !== 'undefined' ? document.documentElement : null;
   const storage = typeof window !== 'undefined' ? window.localStorage : null;
   const themes = ['light', 'dark'];
-  let theme = ''
+  let theme = 'light'
 
   if (typeof storage?.getItem === 'function' && storage.getItem('theme')) {
     theme = storage.getItem('theme');
@@ -19,7 +19,9 @@
 
   $: if (rootEl && theme === 'light') {
     rootEl.classList.remove('theme-dark');
+    rootEl.classList.add('theme-light');
   } else if (rootEl && theme === 'dark') {
+    rootEl.classList.remove('theme-light');
     rootEl.classList.add('theme-dark');
   }
 

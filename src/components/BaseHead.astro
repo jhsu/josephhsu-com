@@ -43,13 +43,15 @@ const socialUrl = new URL(`/open-graph/${routeKey}.png`, Astro.site ?? Astro.url
 <ClientRouter />
 
 <script is:inline>
-    if (
-        (localStorage !== undefined && localStorage.getItem("theme")) ||
-        (!localStorage.getItem("theme") &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
-        document.documentElement.classList.add("theme-dark");
-    } else {
-        document.documentElement.classList.remove("theme-dark");
-    }
+    const root = document.documentElement;
+    const storedTheme = localStorage?.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = storedTheme === "dark" || storedTheme === "light"
+      ? storedTheme
+      : prefersDark
+        ? "dark"
+        : "light";
+
+    root.classList.toggle("theme-dark", theme === "dark");
+    root.classList.toggle("theme-light", theme === "light");
 </script>
