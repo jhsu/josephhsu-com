@@ -25,7 +25,7 @@ const { Content } = await render(post)
     <h1>{title}</h1>
     <hr />
   </header>
-  <div class="container">
+  <div class="container post-container">
     <article class="content">
       <Content />
     </article>
@@ -35,6 +35,10 @@ const { Content } = await render(post)
 </BaseLayout>
 
 <style>
+  .post-container {
+    max-width: 52em;
+  }
+
   header {
     text-align: center;
   }
