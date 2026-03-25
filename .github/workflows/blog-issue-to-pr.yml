@@ -5,27 +5,88 @@ on:
     types: [opened]
 
 jobs:
-  dispatch:
+  draft-post:
     runs-on: ubuntu-latest
-    if: github.event.issue.user.type != 'Bot'
+    if: contains(github.event.issue.labels.*.name, 'blog') && github.event.issue.user.type != 'Bot'
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
     steps:
-      - name: Send issue to Cloudflare Worker
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Create working branch
+        run: |
+          branch="blog/issue-${{ github.event.issue.number }}"
+          git checkout -b "$branch"
+          echo "BRANCH_NAME=$branch" >> "$GITHUB_ENV"
+
+      - name: Build Codex prompt
         env:
-          WORKER_URL: ${{ secrets.BLOG_AGENT_WORKER_URL }}
-          WORKER_TOKEN: ${{ secrets.BLOG_AGENT_WORKER_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
-          REPO: ${{ github.repository }}
         run: |
-          curl -fsS -X POST "$WORKER_URL" \
-            -H "Authorization: Bearer $WORKER_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n \
-              --arg repo \"$REPO\" \
-              --argjson number \"$ISSUE_NUMBER\" \
-              --arg title \"$ISSUE_TITLE\" \
-              --arg body \"$ISSUE_BODY\" \
-              --arg url \"$ISSUE_URL\" \
-              '{repo:$repo, issue:{number:$number, title:$title, body:$body, url:$url}}')"
+          python - <<'PY'
+          import os
+          import pathlib
+
+          template = pathlib.Path('.github/codex/prompts/blog-post.md').read_text(encoding='utf-8').rstrip()
+          prompt = f"{template}\n\nSource issue:\n- Title: {os.environ['ISSUE_TITLE']}\n- URL: {os.environ['ISSUE_URL']}\n\nIssue body:\n{os.environ['ISSUE_BODY']}\n"
+
+          prompt_path = pathlib.Path(os.environ['RUNNER_TEMP']) / 'blog-post-prompt.md'
+          prompt_path.write_text(prompt, encoding='utf-8')
+          print(prompt_path)
+          PY
+
+      - name: Run Codex
+        id: run_codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: ${{ runner.temp }}/blog-post-prompt.md
+          output-file: codex-output.md
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
+          codex-args: --full-auto
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate site build
+        run: pnpm build
+
+      - name: Commit and push
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes from Codex."
+            exit 1
+          fi
+
+          git add src/data/blog-posts
+          git commit -m "draft blog post for issue #${{ github.event.issue.number }}"
+          git push -u origin "$BRANCH_NAME"
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          gh pr create \
+            --head "$BRANCH_NAME" \
+            --base "${{ github.event.repository.default_branch }}" \
+            --title "Draft blog post: $ISSUE_TITLE" \
+            --body "Generated from issue #$ISSUE_NUMBER.\n\nIssue: $ISSUE_URL\n\nThis PR was drafted by Codex in GitHub Actions."
