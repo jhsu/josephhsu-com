@@ -30,6 +30,8 @@ jobs:
         run: |
           branch="blog/issue-${{ github.event.issue.number }}"
           git checkout -b "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@github.com"
           echo "BRANCH_NAME=$branch" >> "$GITHUB_ENV"
 
       - name: Build Codex prompt
