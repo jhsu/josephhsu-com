@@ -29,7 +29,7 @@ export default defineConfig({
 
   vite: {
     server: {
-      allowedHosts: ["localhost", "bunarch.local"]
+      allowedHosts: ["localhost", "bunarch.tail3428.ts.net", "atjhsu.localhost"]
     }
   },
 

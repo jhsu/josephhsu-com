@@ -1,0 +1,228 @@
+---
+/**
+ * ScrollVideo — a scroll-driven video scrubber.
+ * The video sits in a sticky frame; scrolling through the container
+ * scrubs playback from start to end.
+ *
+ * Props:
+ *   src        – video URL
+ *   scrollH    – how many vh the scroll container spans (default 300)
+ *   offsetTop  – top offset for the sticky frame (default "0")
+ */
+const {
+  src = '/joe-looking-around.mp4',
+  scrollH = 300,
+  offsetTop = '0',
+} = Astro.props;
+---
+
+<div class="scroll-video-outer" style={`height: ${scrollH}vh;`}>
+  <div class="scroll-video-sticky" style={`top: ${offsetTop};`}>
+    <canvas class="scroll-video-canvas"></canvas>
+    <video
+      class="scroll-video-el"
+      src={src}
+      muted
+      playsinline
+      preload="auto"
+      crossorigin="anonymous"
+    />
+    <div class="scroll-video-content">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<script>
+  function initScrollVideo() {
+    const containers = document.querySelectorAll<HTMLDivElement>('.scroll-video-outer');
+
+    containers.forEach((container) => {
+      const video = container.querySelector<HTMLVideoElement>('.scroll-video-el');
+      const canvas = container.querySelector<HTMLCanvasElement>('.scroll-video-canvas');
+      if (!video || !canvas) return;
+
+      const ctx = canvas.getContext('2d')!;
+      let rafId: number | null = null;
+      let duration = 0;
+      let ready = false;
+
+      function resize() {
+        const rect = container.querySelector('.scroll-video-sticky')!.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        // Redraw current frame after resize
+        if (ready) drawFrame();
+      }
+
+      function drawFrame() {
+        const w = canvas.width / window.devicePixelRatio;
+        const h = canvas.height / window.devicePixelRatio;
+        ctx.clearRect(0, 0, w, h);
+
+        // Calculate aspect-ratio-preserving draw dimensions
+        const vw = video.videoWidth || 1;
+        const vh = video.videoHeight || 1;
+        const videoAspect = vw / vh;
+        const canvasAspect = w / h;
+
+        let dw: number, dh: number, dx: number, dy: number;
+        if (canvasAspect > videoAspect) {
+          // Canvas is wider — fit height, center horizontally
+          dh = h;
+          dw = h * videoAspect;
+          dx = (w - dw) / 2;
+          dy = 0;
+        } else {
+          // Canvas is taller — fit width, center vertically
+          dw = w;
+          dh = w / videoAspect;
+          dx = 0;
+          dy = (h - dh) / 2;
+        }
+
+        ctx.drawImage(video, dx, dy, dw, dh);
+      }
+
+      function onScroll() {
+        if (!ready) return;
+        if (rafId !== null) return; // coalesce to rAF
+
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          const rect = container.getBoundingClientRect();
+          const scrollableDistance = container.offsetHeight - window.innerHeight;
+          if (scrollableDistance <= 0) return;
+
+          // Progress: 0 when the top of the container hits the top of the viewport,
+          //           1 when the bottom of the container hits the bottom of the viewport.
+          const progress = Math.min(1, Math.max(0, -rect.top / scrollableDistance));
+
+          const targetTime = progress * duration;
+          // Only seek if the difference is meaningful (avoid micro-seeks)
+          if (Math.abs(video.currentTime - targetTime) > 0.02) {
+            video.currentTime = targetTime;
+          }
+
+          // Update content opacity: fade in early, fade out late
+          const content = container.querySelector('.scroll-video-content') as HTMLElement;
+          if (content) {
+            // Fade in 0-15%, full 15-70%, fade out 70-100%
+            let opacity = 1;
+            if (progress < 0.15) opacity = progress / 0.15;
+            else if (progress > 0.70) opacity = 1 - (progress - 0.70) / 0.30;
+            content.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+            // Slight parallax: content moves up as you scroll
+            content.style.transform = `translateY(${progress * -60}px)`;
+          }
+
+          drawFrame();
+        });
+      }
+
+      video.addEventListener('loadedmetadata', () => {
+        duration = video.duration;
+        ready = true;
+        resize();
+        // Draw first frame
+        video.currentTime = 0;
+      });
+
+      video.addEventListener('seeked', () => {
+        drawFrame();
+      });
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', () => {
+        // Reset scale on resize
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        resize();
+      });
+
+      // Initial draw attempt (in case video is cached)
+      if (video.readyState >= 1) {
+        duration = video.duration;
+        ready = true;
+        resize();
+        video.currentTime = 0;
+      }
+    });
+  }
+
+  // Run on initial load
+  initScrollVideo();
+
+  // Re-run after Astro page transitions
+  document.addEventListener('astro:after-swap', initScrollVideo);
+</script>
+
+<style>
+  .scroll-video-outer {
+    position: relative;
+    width: 100%;
+  }
+
+  .scroll-video-sticky {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scroll-video-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Dark overlay for text readability */
+  .scroll-video-sticky::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0.15) 0%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .scroll-video-el {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+  }
+
+  .scroll-video-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+    width: 100%;
+    max-width: 1080px;
+    padding: 0 2rem;
+  }
+
+  /* Make links and interactive elements clickable inside content */
+  .scroll-video-content a,
+  .scroll-video-content button {
+    pointer-events: auto;
+  }
+</style>
